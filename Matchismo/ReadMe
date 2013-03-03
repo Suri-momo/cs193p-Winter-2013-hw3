@@ -1,39 +1,40 @@
 //
 //  README
-//  Matchismo
+//  Matchismo: v3 (Graphical Set)
 //
-//  Created by Dulio Denis on 1/26/13.
+//  Originally Created by Dulio Denis on 1/26/13. 2/25/2013.
 //  Copyright (c) 2013 Stanford University. All rights reserved.
 //
-Tag 1: Copied Walkthrough from Lecture 2.
-Tag 2: Added Model Classes from Lecture 1.
-Tag 3: Added Card Model Implementation from Lecture 1.
-Tag 4: Added PlayingCard and PlayingCardDeck Model Classes from Lecture 2.
-Tag 5: Added cycling through a full deck picking one card at a time and decrementing the deck.
-Tag 6: First HW #1 To-Do: upgraded to Lecture 3.  Multi-cards + CardMatchingGame game model.
-Tag 7: Second HW #1 To-Do: now with 16 cards.
-Tag 8: Third HW #1 To-Do: now with a text label for the last flip.
-Tag 9: Fourth HW #1 To-Do: Deal Button that redeals cards.
-Tag 10: HW #1 To-Do #5: 3 Card Match
-Storyboard (Added UISegmentedControl for 2 to 3 card match mode)
-CardGameViewController (Mode Aware)
-CardMatchingGame (Match 3 Card Engine)
-PlayingCard (Updated match to 3 card awareness)
-Tag 11: HW #1 To-Do #6: Disable the game play mode control when flipping starts and re-enable it when a re-deal happens: ViewControll & ReadMe Update.
 
-To-Do on HW #0:
-1. In the ViewController stop when the deck has no cards.
-2. Show the whole deck in a string in the UI to see the deck diminishing to zero for every pick.
-3. Add a 'New Deck' button.
+Homework #3:
 
-Homework #1:
-1. Upgrade to Lecture 3 code. (Done)
-2. Add 4 Cards for a total of 16. (Done)
-3. Add a text label to describe the result of the last flip. (Done)
-4. Add Deal Button to Start a New Game. (Done)
-5. Add a switch to switch between 2-card match or 3-card match mode. (Done)
-6. Disable switch when flipping starts and enable when Deal button is pressed. (Done)
-7. Use an image for the back of the card.
+1. Baseline one app that does PlayingCard Match and Set Match - HW #2.
 
-HW #1 Extra-Credit:
-Add a UISlider to your UI which travels through the history of the currently-being- played game’s flips and display it to the user. 
+2. Use polymorphism to redesign the controllers.
+   Use an abstract base CardGame Controller class that Set and PlayingCard derive from.
+   
+3. For Set have 12 cards initially dealt and always show what's on them (no face down on these).
+   For PlayingCard deal 22 cards face down.
+   
+4. Support Matches just like in HW #2.
+
+5. When Set Match remove cards from the game and rearrange remaining cards.
+
+6. Core Graphics / UIBezierPath based Set cards - no more attributed strings.
+   Integrate PlayingCardView from Lecture 6.
+   
+7. In Set 'Request 3 More Cards' feature.
+
+8. Auto-scroll for new cards.
+
+9. Provide Set end of deck message.
+
+10. Allow scrolling if more cards than can fit on the screen.
+
+11. Add a 'last flip status' versus the current UILabel for currently selected.
+
+12. Remove flip counter but keep score.
+
+13. Keep 'Deal' button.
+
+14. Use Autolayout to have games work in both Landscape and Portrait in both iPhone 4 & 5.
