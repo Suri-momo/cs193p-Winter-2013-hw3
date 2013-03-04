@@ -8,16 +8,14 @@
 // Tap through all the cards in the deck.
 
 #import "CardGameViewController.h"
-#import "PlayingCardDeck.h"
 #import "CardMatching Game.h"
 #import "GameResult.h"
 #import "PlayingCardView.h"
 #import "PlayingCard.h"
 
-@interface CardGameViewController ()
+@interface CardGameViewController () <UICollectionViewDataSource>
 @property (weak, nonatomic) IBOutlet UILabel *flipsLabel;
 @property (nonatomic) int flipCount;
-@property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *CardButtons;
 @property (strong, nonatomic) CardMatching_Game *game;
 @property (weak, nonatomic) IBOutlet UILabel *scoreLabel;
 @property (strong, nonatomic) IBOutlet UILabel *resultsLabel;
@@ -25,27 +23,35 @@
 @property (nonatomic) int matchMode;
 @property (strong, nonatomic) GameResult *gameResult;
 @property (weak, nonatomic) IBOutlet PlayingCardView *playingCardView;
-@property (strong, nonatomic) Deck *deck;
+@property (weak, nonatomic) IBOutlet UICollectionView *cardCollectionView;
 @end
 
 @implementation CardGameViewController
 
-- (Deck *)deck
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
 {
-    if (!_deck) _deck = [[PlayingCardDeck alloc] init];
-    return _deck;
+    return 1;
 }
 
-- (IBAction)swipe:(UISwipeGestureRecognizer *)sender
+- (NSInteger)collectionView:(UICollectionView *)collectionView
+     numberOfItemsInSection:(NSInteger)section
 {
-    [UIView transitionWithView:self.playingCardView
-                      duration:0.5
-                       options:UIViewAnimationOptionTransitionFlipFromLeft
-                    animations:^{
-                        if (!self.playingCardView.faceUp) [self drawRandomPlayingCard];
-                        self.playingCardView.faceUp = !self.playingCardView.faceUp;
-                    }
-                    completion:NULL];
+    return self.startingCardCount; // ask game how many cards are in play
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
+                  cellForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"PlayingCard" forIndexPath:indexPath];
+    Card *card = [self.game cardAtindex:indexPath.item];
+    
+    [self updateCell:cell usingCard:card];
+    return cell;
+}
+
+- (void)updateCell:(UICollectionViewCell *)cell usingCard:(Card *)card
+{
+    // abstract
 }
 
 - (void)setPlayingCardView:(PlayingCardView *)playingCardView
@@ -53,18 +59,8 @@
     _playingCardView = playingCardView;
     // playingCardView.rank = 13; // K
     // playingCardView.suit = @"♥";
-    [self drawRandomPlayingCard];
+//    [self drawRandomPlayingCard];
     [playingCardView addGestureRecognizer:[[UIPinchGestureRecognizer alloc] initWithTarget:playingCardView action:@selector(pinch:)]];
-}
-
-- (void)drawRandomPlayingCard
-{
-    Card *card = [self.deck drawRandomCard];
-    if ([card isKindOfClass:[PlayingCard class]]) {
-        PlayingCard *playingCard = (PlayingCard *)card;
-        self.playingCardView.rank = playingCard.rank;
-        self.playingCardView.suit = playingCard.suit;
-    }
 }
 
 - (GameResult *)gameResult
@@ -95,42 +91,24 @@
 - (CardMatching_Game *)game
 {
     if (!_game) {
-        _game = [[CardMatching_Game alloc] initWithCardCount:[self.CardButtons count]
-                                                   usingDeck:[[PlayingCardDeck alloc] init]];
+        _game = [[CardMatching_Game alloc] initWithCardCount:self.startingCardCount
+                                                   usingDeck:[self createDeck]];
     }
     if (!self.matchMode) self.matchMode = 2; // default to 2 card mode at first
     return _game;
 }
 
-- (void)setCardButtons:(NSArray *)CardButtons
-{
-    _CardButtons = CardButtons;
-    [self updateUI];
-}
+- (Deck *)createDeck { return nil; } // abstract
 
+                 
 -(void)updateUI
 {
-    for (UIButton *cardButton in self.CardButtons) {
-        Card *card = [self.game cardAtindex:[self.CardButtons indexOfObject:cardButton]];        
-        [cardButton setTitle:card.contents forState:UIControlStateSelected];
-        [cardButton setTitle:card.contents forState:UIControlStateSelected|UIControlStateDisabled];
-        cardButton.selected = card.isFaceUp;
-        cardButton.enabled = !card.isUnplayable;
-        
-        if (self.matchMode == 2) {
-            if (card.isFaceUp) [cardButton setImage:nil forState:UIControlStateNormal];
-            else  [cardButton setImage:[UIImage imageNamed:@"greencardback.png"] forState:UIControlStateNormal];
-        }
-        
-// the three mode match game (Set) uses a different technique and no backcard flip - highlight / unhighlight
-// to-do a 3 card match game (non-set with a redback) need a gametype variable instead of match mode
-//        if (self.matchMode == 3) {
-//            if (card.isFaceUp) [cardButton setImage:nil forState:UIControlStateNormal];
-//            else  [cardButton setImage:[UIImage imageNamed:@"redcardback.png"] forState:UIControlStateNormal];
-//        }
-        
-        cardButton.alpha = (card.unplayable ? 0.3 : 1.0);
+    for (UICollectionViewCell *cell in [self.cardCollectionView visibleCells]) {
+        NSIndexPath *indexPath = [self.cardCollectionView indexPathForCell:cell];
+        Card *card = [self.game cardAtindex:indexPath.item];
+        [self updateCell:cell usingCard:card]; // #winning
     }
+    
     self.scoreLabel.text = [NSString stringWithFormat:@"Score = %d", self.game.score];
     self.resultsLabel.text = self.game.flipResult;
 }
@@ -143,15 +121,18 @@
     NSLog(@"FlipCount =%d", self.flipCount);
 }
 
-- (IBAction)flipCard:(UIButton *)sender
+- (IBAction)flipCard:(UITapGestureRecognizer *)gesture
 {
-    sender.alpha = 0;
-    [self.game flipCardAtIndex:[self.CardButtons indexOfObject:sender] matchMode:self.matchMode];
-    self.flipCount++;
-    // disable UISegmentControl
-    self.mode.enabled = FALSE;
-    self.gameResult.score = self.game.score;
-    [self updateUI];
+    CGPoint tapLocation = [gesture locationInView:self.cardCollectionView];
+    NSIndexPath *indexpath = [self.cardCollectionView indexPathForItemAtPoint:tapLocation];
+    if (indexpath) {
+        [self.game flipCardAtIndex:indexpath.item matchMode:2];
+        self.flipCount++;
+        // disable UISegmentControl
+        self.mode.enabled = FALSE;
+        self.gameResult.score = self.game.score;
+        [self updateUI];
+    }
 }
 
 @end
