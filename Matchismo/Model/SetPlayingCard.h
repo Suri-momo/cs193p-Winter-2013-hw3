@@ -10,7 +10,13 @@
 
 @interface SetPlayingCard : Card
 
-@property (nonatomic) NSUInteger rank;          // 1, 2, or 3
+@property (nonatomic) NSUInteger number;          // 1, 2, or 3
+/* Eventually refactor to use just ints
+@property (nonatomic) NSInteger symbol;
+@property (nonatomic) NSInteger shade;
+@property (nonatomic) NSInteger color;
+*/
+
 @property (strong, nonatomic) NSString *symbol; // triangle, circle, square
 @property (strong, nonatomic) NSString *shade;  // solid, striped, or open
 @property (strong, nonatomic) NSString *color;  // red, green, or purple

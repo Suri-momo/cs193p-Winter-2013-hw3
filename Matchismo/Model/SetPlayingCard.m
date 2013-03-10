@@ -36,7 +36,7 @@
         if (
             (
              (
-              (((c1.rank == c2.rank) && (c2.rank == c3.rank) && (c1.rank == c3.rank)) || ((c1.rank != c2.rank) && (c2.rank != c3.rank) && (c1.rank != c3.rank))) &&
+              (((c1.number == c2.number) && (c2.number == c3.number) && (c1.number == c3.number)) || ((c1.number != c2.number) && (c2.number != c3.number) && (c1.number != c3.number))) &&
               
               (([c1.symbol isEqualToString:c2.symbol] && [c2.symbol isEqualToString:c3.symbol] && [c1.symbol isEqualToString:c3.symbol]) ||
                (![c1.symbol isEqualToString:c2.symbol] && ![c2.symbol isEqualToString:c3.symbol] && ![c1.symbol isEqualToString:c3.symbol])) &&
@@ -57,10 +57,10 @@
     return score;
 }
 
-- (void)setRank:(NSUInteger)rank
+- (void)setNumber:(NSUInteger)number
 {
-    if (rank <= [SetPlayingCard maxRank]) {
-        _rank = rank;
+    if (number <= [SetPlayingCard maxRank]) {
+        _number = number;
     }
 }
 
@@ -140,7 +140,7 @@
     NSString *shadeString = [NSString stringWithFormat:@"%d", [SetPlayingCard valueofShade:self.shade]];
     NSString *colorString = [NSString stringWithFormat:@"%d", [SetPlayingCard valueofColor:self.color]];
     
-    symbolMark = [[[[symbolMark stringByAppendingString:rankStrings[self.rank]]
+    symbolMark = [[[[symbolMark stringByAppendingString:rankStrings[self.number]]
                     stringByAppendingString: symbolString]
                    stringByAppendingString: shadeString]
                   stringByAppendingString: colorString];

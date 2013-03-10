@@ -21,7 +21,7 @@
                 for (id color in [SetPlayingCard validColors]) {
                     for (NSUInteger rank =0; rank < [SetPlayingCard maxRank]; rank++) {
                         SetPlayingCard *card = [[SetPlayingCard alloc] init];
-                        card.rank = rank;
+                        card.number = rank;
                         card.color = color;
                         card.shade = shade;
                         card.symbol = symbol;

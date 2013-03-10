@@ -11,6 +11,8 @@
 #import "GameResult.h"
 #import "SetPlayingCardDeck.h"
 #import "SetPlayingCard.h"
+#import "SetCardView.h"
+#import "SetPlayingCardCollectionViewCell.h"
 
 @interface CardGameViewController()
 -(void)updateUI;
@@ -18,19 +20,80 @@
 @end
 
 @interface SetCardGameViewController ()
-@property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *CardButtons;
+// @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *CardButtons;
 @property (strong, nonatomic) CardMatching_Game *game;
 @property (nonatomic) int matchMode;
+@property (weak, nonatomic) IBOutlet UICollectionView *setCollectionView;
 
-- (NSString *)makeSetCardFace:(Card *)card;
+// - (NSString *)makeSetCardFace:(Card *)card;
 
 @end
 
 @implementation SetCardGameViewController
 
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
+{
+    return 1;
+}
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
+{
+    return self.startingCardCount;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    UICollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"SetCard" forIndexPath:indexPath];
+    Card *card = [self.game cardAtindex:indexPath.item];
+    [self updateCell:cell usingCard:card];
+    return cell;
+}
+
+#pragma mark - Concrete Classes
+
+- (void)updateCell:(UICollectionViewCell *)cell usingCard:(Card *)card
+{
+    // concrete
+    if ([cell isKindOfClass:[SetPlayingCardCollectionViewCell class]]) {
+        SetCardView *setCardView = ((SetPlayingCardCollectionViewCell *)cell).setCardView;
+        
+        if ([card isKindOfClass:[SetPlayingCard class]]) {
+            SetPlayingCard *playingCard = (SetPlayingCard *)card;
+            setCardView.number = playingCard.number;
+            [self cardSetter:setCardView usingPlayingCard:playingCard];
+        }
+    }
+}
+
+- (void)cardSetter:(SetCardView *)setCard usingPlayingCard:(SetPlayingCard *)playingCard
+{
+    if ([playingCard.color isEqualToString:@"red"]) setCard.color = RED;
+    if ([playingCard.color isEqualToString:@"purple"]) setCard.color = PURPLE;
+    if ([playingCard.color isEqualToString:@"green"]) setCard.color = GREEN;
+    
+    if ([playingCard.shade isEqualToString:@"solid"]) setCard.shading = SOLID;
+    if ([playingCard.shade isEqualToString:@"stripped"]) setCard.shading = STRIPE;
+    if ([playingCard.shade isEqualToString:@"open"]) setCard.shading = OPEN;
+    
+    if ([playingCard.symbol isEqualToString:@"▲"]) setCard.shape = DIAMOND;
+    if ([playingCard.symbol isEqualToString:@"●"]) setCard.shape = OVAL;
+    if ([playingCard.symbol isEqualToString:@"■"]) setCard.shape = SQUIGGLE;
+}
+
+
+- (Deck *)createDeck
+{
+    return [[SetPlayingCardDeck alloc] init];
+}
+
+- (NSUInteger)startingCardCount
+{
+    return 12;
+}
+
 - (CardMatching_Game *)game
 {
-    if (!_game) _game = [[CardMatching_Game alloc] initWithCardCount:[self.CardButtons count]
+    if (!_game) _game = [[CardMatching_Game alloc] initWithCardCount:self.startingCardCount
                                                            usingDeck:[[SetPlayingCardDeck alloc] init]];
     if (!self.matchMode) self.matchMode = 3;
     return _game;
@@ -41,75 +104,10 @@
     return card.contents;
 }
 
-/*
- enumeration = NUMBER-SYMBOL-SHADE-COLOR
- 
- RA= [0] 1 | 2 | 3
- SY= [1] 0 | 1 | 2 = ▲, ●, ■
- SH= [2] 0 | 1 | 2 = solid, stripped, open
- CO= [3] 0 | 1 | 2 = red, green, purple
- 
- Model Enumeration Encoding Ex: 1231 = 1 Circle Purple Solid
-*/
-
-- (NSMutableAttributedString *)attributedButtonTitle:(Card *)card
-{
-    NSMutableAttributedString *myAttributedString;
-    NSString *symbolString;
-    UIColor *color;
-    
-    // Symbol Selector
-    switch ([card.contents characterAtIndex:1]) {
-        case '0': symbolString = @"▲"; break;
-        case '1': symbolString = @"●"; break;
-        case '2': symbolString = @"■"; break;
-    }
-    symbolString = [symbolString stringByPaddingToLength:[[card.contents substringWithRange:NSMakeRange(0, 1)] intValue] withString:symbolString startingAtIndex:0];    
-    myAttributedString = [[NSMutableAttributedString alloc] initWithString:symbolString];
-    NSRange range = [symbolString rangeOfString:symbolString];
-    
-    // Color Selector
-    switch ([card.contents characterAtIndex:3]) {
-        case '0': color = [UIColor redColor]; break;
-        case '1': color = [UIColor greenColor]; break;
-        case '2': color = [UIColor purpleColor]; break;
-    }
-
-    // Shading Selector
-    switch ([card.contents characterAtIndex:2]) {
-        case '0': // solid
-            color = [color colorWithAlphaComponent:1.0f];
-            [myAttributedString addAttribute:NSForegroundColorAttributeName value:color range:range];
-            break;
-        case '1': // stripped
-            color = [color colorWithAlphaComponent:0.3f];
-            [myAttributedString addAttribute:NSForegroundColorAttributeName value:color range:range];
-            break;
-        case '2': // open
-            [myAttributedString addAttribute:NSForegroundColorAttributeName value:[color colorWithAlphaComponent:0.02f] range:range];
-            [myAttributedString addAttribute:NSStrokeColorAttributeName value:color range:range];
-            [myAttributedString addAttribute:NSStrokeWidthAttributeName value:@4.0f range:range];
-            break;
-    }
-        
-    return myAttributedString;
-}
-
 -(void)updateUI
 {
     [super updateUI];
-    for (UIButton *cardButton in self.CardButtons) {
-        Card *card = [self.game cardAtindex:[self.CardButtons indexOfObject:cardButton]];
-        
-        [cardButton setAttributedTitle:[self attributedButtonTitle:card] forState:UIControlStateSelected];
-        [cardButton setAttributedTitle:[self attributedButtonTitle:card] forState:UIControlStateNormal];
-        
-        // isFaceUp is the new isSelected
-        cardButton.selected = card.isFaceUp;
-        cardButton.enabled = !card.isUnplayable;
-        cardButton.backgroundColor = cardButton.isSelected ? [UIColor grayColor]:[UIColor whiteColor];
-        cardButton.alpha = (card.unplayable ? 0.3 : 1.0);
-    }
+    
 }
 
 - (void)viewDidLoad
